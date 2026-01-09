@@ -220,7 +220,17 @@ library GovernanceHelper {
             console.log("Voting with account: ", voters[i]);
             vm.startBroadcast(voters[i]);
             console.log("Proposal state during voting: ", uint(governorBravo.state(proposalId)));
-            governorBravo.castVoteWithReason(proposalId, 1, "yes"); // 1 = "For" vote
+            try governorBravo.castVoteWithReason(proposalId, 1, "yes") {   
+            } catch Error(string memory reason) {
+                // catch failing revert() and require()
+                console.log("Failed to cast vote for account: ", voters[i]);
+                console.log("Reason: ", reason);
+            } catch (bytes memory reason) {
+                // catch failing assert() and custom error()
+                console.log("Failed to cast vote for account: ", voters[i]);
+                console.logBytes(reason);
+            }
+            // governorBravo.castVoteWithReason(proposalId, 1, "yes"); // 1 = "For" vote
             vm.stopBroadcast();
         }
     }
