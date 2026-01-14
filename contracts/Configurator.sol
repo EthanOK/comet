@@ -7,7 +7,6 @@ import "./ConfiguratorStorage.sol";
 import "./marketupdates/MarketAdminPermissionCheckerInterface.sol";
 
 contract Configurator is ConfiguratorStorage {
-
     /** Custom events **/
     event AddAsset(address indexed cometProxy, AssetConfig assetConfig);
     event CometDeployed(address indexed cometProxy, address indexed newComet);
@@ -15,30 +14,86 @@ contract Configurator is ConfiguratorStorage {
     event SetFactory(address indexed cometProxy, address indexed oldFactory, address indexed newFactory);
     event SetGovernor(address indexed cometProxy, address indexed oldGovernor, address indexed newGovernor);
     event SetConfiguration(address indexed cometProxy, Configuration oldConfiguration, Configuration newConfiguration);
-    event SetPauseGuardian(address indexed cometProxy, address indexed oldPauseGuardian, address indexed newPauseGuardian);
-    event SetMarketAdminPermissionChecker(address indexed oldMarketAdminPermissionChecker, address indexed newMarketAdminPermissionChecker);
-    event SetBaseTokenPriceFeed(address indexed cometProxy, address indexed oldBaseTokenPriceFeed, address indexed newBaseTokenPriceFeed);
+    event SetPauseGuardian(
+        address indexed cometProxy,
+        address indexed oldPauseGuardian,
+        address indexed newPauseGuardian
+    );
+    event SetMarketAdminPermissionChecker(
+        address indexed oldMarketAdminPermissionChecker,
+        address indexed newMarketAdminPermissionChecker
+    );
+    event SetBaseTokenPriceFeed(
+        address indexed cometProxy,
+        address indexed oldBaseTokenPriceFeed,
+        address indexed newBaseTokenPriceFeed
+    );
     event SetExtensionDelegate(address indexed cometProxy, address indexed oldExt, address indexed newExt);
-    event SetSupplyKink(address indexed cometProxy,uint64 oldKink, uint64 newKink);
-    event SetSupplyPerYearInterestRateSlopeLow(address indexed cometProxy,uint64 oldIRSlopeLow, uint64 newIRSlopeLow);
-    event SetSupplyPerYearInterestRateSlopeHigh(address indexed cometProxy,uint64 oldIRSlopeHigh, uint64 newIRSlopeHigh);
-    event SetSupplyPerYearInterestRateBase(address indexed cometProxy,uint64 oldIRBase, uint64 newIRBase);
-    event SetBorrowKink(address indexed cometProxy,uint64 oldKink, uint64 newKink);
-    event SetBorrowPerYearInterestRateSlopeLow(address indexed cometProxy,uint64 oldIRSlopeLow, uint64 newIRSlopeLow);
-    event SetBorrowPerYearInterestRateSlopeHigh(address indexed cometProxy,uint64 oldIRSlopeHigh, uint64 newIRSlopeHigh);
-    event SetBorrowPerYearInterestRateBase(address indexed cometProxy,uint64 oldIRBase, uint64 newIRBase);
-    event SetStoreFrontPriceFactor(address indexed cometProxy, uint64 oldStoreFrontPriceFactor, uint64 newStoreFrontPriceFactor);
-    event SetBaseTrackingSupplySpeed(address indexed cometProxy, uint64 oldBaseTrackingSupplySpeed, uint64 newBaseTrackingSupplySpeed);
-    event SetBaseTrackingBorrowSpeed(address indexed cometProxy, uint64 oldBaseTrackingBorrowSpeed, uint64 newBaseTrackingBorrowSpeed);
+    event SetSupplyKink(address indexed cometProxy, uint64 oldKink, uint64 newKink);
+    event SetSupplyPerYearInterestRateSlopeLow(address indexed cometProxy, uint64 oldIRSlopeLow, uint64 newIRSlopeLow);
+    event SetSupplyPerYearInterestRateSlopeHigh(
+        address indexed cometProxy,
+        uint64 oldIRSlopeHigh,
+        uint64 newIRSlopeHigh
+    );
+    event SetSupplyPerYearInterestRateBase(address indexed cometProxy, uint64 oldIRBase, uint64 newIRBase);
+    event SetBorrowKink(address indexed cometProxy, uint64 oldKink, uint64 newKink);
+    event SetBorrowPerYearInterestRateSlopeLow(address indexed cometProxy, uint64 oldIRSlopeLow, uint64 newIRSlopeLow);
+    event SetBorrowPerYearInterestRateSlopeHigh(
+        address indexed cometProxy,
+        uint64 oldIRSlopeHigh,
+        uint64 newIRSlopeHigh
+    );
+    event SetBorrowPerYearInterestRateBase(address indexed cometProxy, uint64 oldIRBase, uint64 newIRBase);
+    event SetStoreFrontPriceFactor(
+        address indexed cometProxy,
+        uint64 oldStoreFrontPriceFactor,
+        uint64 newStoreFrontPriceFactor
+    );
+    event SetBaseTrackingSupplySpeed(
+        address indexed cometProxy,
+        uint64 oldBaseTrackingSupplySpeed,
+        uint64 newBaseTrackingSupplySpeed
+    );
+    event SetBaseTrackingBorrowSpeed(
+        address indexed cometProxy,
+        uint64 oldBaseTrackingBorrowSpeed,
+        uint64 newBaseTrackingBorrowSpeed
+    );
     event SetBaseMinForRewards(address indexed cometProxy, uint104 oldBaseMinForRewards, uint104 newBaseMinForRewards);
     event SetBaseBorrowMin(address indexed cometProxy, uint104 oldBaseBorrowMin, uint104 newBaseBorrowMin);
     event SetTargetReserves(address indexed cometProxy, uint104 oldTargetReserves, uint104 newTargetReserves);
     event UpdateAsset(address indexed cometProxy, AssetConfig oldAssetConfig, AssetConfig newAssetConfig);
-    event UpdateAssetPriceFeed(address indexed cometProxy, address indexed asset, address oldPriceFeed, address newPriceFeed);
-    event UpdateAssetBorrowCollateralFactor(address indexed cometProxy, address indexed asset, uint64 oldBorrowCF, uint64 newBorrowCF);
-    event UpdateAssetLiquidateCollateralFactor(address indexed cometProxy, address indexed asset, uint64 oldLiquidateCF, uint64 newLiquidateCF);
-    event UpdateAssetLiquidationFactor(address indexed cometProxy, address indexed asset, uint64 oldLiquidationFactor, uint64 newLiquidationFactor);
-    event UpdateAssetSupplyCap(address indexed cometProxy, address indexed asset, uint128 oldSupplyCap, uint128 newSupplyCap);
+    event UpdateAssetPriceFeed(
+        address indexed cometProxy,
+        address indexed asset,
+        address oldPriceFeed,
+        address newPriceFeed
+    );
+    event UpdateAssetBorrowCollateralFactor(
+        address indexed cometProxy,
+        address indexed asset,
+        uint64 oldBorrowCF,
+        uint64 newBorrowCF
+    );
+    event UpdateAssetLiquidateCollateralFactor(
+        address indexed cometProxy,
+        address indexed asset,
+        uint64 oldLiquidateCF,
+        uint64 newLiquidateCF
+    );
+    event UpdateAssetLiquidationFactor(
+        address indexed cometProxy,
+        address indexed asset,
+        uint64 oldLiquidationFactor,
+        uint64 newLiquidationFactor
+    );
+    event UpdateAssetSupplyCap(
+        address indexed cometProxy,
+        address indexed asset,
+        uint128 oldSupplyCap,
+        uint128 newSupplyCap
+    );
 
     /** Custom errors **/
     error AlreadyInitialized();
@@ -59,8 +114,8 @@ contract Configurator is ConfiguratorStorage {
      * @dev Ensures that the caller is either the governor or the market admin.
      * This delegates the permission check logic to the MarketAdminPermissionChecker contract.
      */
-    modifier governorOrMarketAdmin {
-        if(msg.sender != governor) marketAdminPermissionChecker.checkUpdatePermission(msg.sender);
+    modifier governorOrMarketAdmin() {
+        if (msg.sender != governor) marketAdminPermissionChecker.checkUpdatePermission(msg.sender);
         _;
     }
 
@@ -95,10 +150,11 @@ contract Configurator is ConfiguratorStorage {
     function setConfiguration(address cometProxy, Configuration calldata newConfiguration) external {
         if (msg.sender != governor) revert Unauthorized();
         Configuration memory oldConfiguration = configuratorParams[cometProxy];
-        if (oldConfiguration.baseToken != address(0) &&
+        if (
+            oldConfiguration.baseToken != address(0) &&
             (oldConfiguration.baseToken != newConfiguration.baseToken ||
-             oldConfiguration.trackingIndexScale != newConfiguration.trackingIndexScale))
-            revert ConfigurationAlreadyExists();
+                oldConfiguration.trackingIndexScale != newConfiguration.trackingIndexScale)
+        ) revert ConfigurationAlreadyExists();
 
         configuratorParams[cometProxy] = newConfiguration;
         emit SetConfiguration(cometProxy, oldConfiguration, newConfiguration);
@@ -122,10 +178,12 @@ contract Configurator is ConfiguratorStorage {
     }
 
     /**
-    * @notice Sets the MarketAdminPermissionChecker contract
-    * @dev Note: Only callable by governor
-    **/
-    function setMarketAdminPermissionChecker(MarketAdminPermissionCheckerInterface newMarketAdminPermissionChecker) external {
+     * @notice Sets the MarketAdminPermissionChecker contract
+     * @dev Note: Only callable by governor
+     **/
+    function setMarketAdminPermissionChecker(
+        MarketAdminPermissionCheckerInterface newMarketAdminPermissionChecker
+    ) external {
         if (msg.sender != governor) revert Unauthorized();
         address oldMarketAdminPermissionChecker = address(marketAdminPermissionChecker);
         marketAdminPermissionChecker = newMarketAdminPermissionChecker;
@@ -204,13 +262,19 @@ contract Configurator is ConfiguratorStorage {
         emit SetStoreFrontPriceFactor(cometProxy, oldStoreFrontPriceFactor, newStoreFrontPriceFactor);
     }
 
-    function setBaseTrackingSupplySpeed(address cometProxy, uint64 newBaseTrackingSupplySpeed) external governorOrMarketAdmin {
+    function setBaseTrackingSupplySpeed(
+        address cometProxy,
+        uint64 newBaseTrackingSupplySpeed
+    ) external governorOrMarketAdmin {
         uint64 oldBaseTrackingSupplySpeed = configuratorParams[cometProxy].baseTrackingSupplySpeed;
         configuratorParams[cometProxy].baseTrackingSupplySpeed = newBaseTrackingSupplySpeed;
         emit SetBaseTrackingSupplySpeed(cometProxy, oldBaseTrackingSupplySpeed, newBaseTrackingSupplySpeed);
     }
 
-    function setBaseTrackingBorrowSpeed(address cometProxy, uint64 newBaseTrackingBorrowSpeed) external governorOrMarketAdmin {
+    function setBaseTrackingBorrowSpeed(
+        address cometProxy,
+        uint64 newBaseTrackingBorrowSpeed
+    ) external governorOrMarketAdmin {
         uint64 oldBaseTrackingBorrowSpeed = configuratorParams[cometProxy].baseTrackingBorrowSpeed;
         configuratorParams[cometProxy].baseTrackingBorrowSpeed = newBaseTrackingBorrowSpeed;
         emit SetBaseTrackingBorrowSpeed(cometProxy, oldBaseTrackingBorrowSpeed, newBaseTrackingBorrowSpeed);
@@ -263,28 +327,44 @@ contract Configurator is ConfiguratorStorage {
         emit UpdateAssetPriceFeed(cometProxy, asset, oldPriceFeed, newPriceFeed);
     }
 
-    function updateAssetBorrowCollateralFactor(address cometProxy, address asset, uint64 newBorrowCF) external governorOrMarketAdmin {
+    function updateAssetBorrowCollateralFactor(
+        address cometProxy,
+        address asset,
+        uint64 newBorrowCF
+    ) external governorOrMarketAdmin {
         uint assetIndex = getAssetIndex(cometProxy, asset);
         uint64 oldBorrowCF = configuratorParams[cometProxy].assetConfigs[assetIndex].borrowCollateralFactor;
         configuratorParams[cometProxy].assetConfigs[assetIndex].borrowCollateralFactor = newBorrowCF;
         emit UpdateAssetBorrowCollateralFactor(cometProxy, asset, oldBorrowCF, newBorrowCF);
     }
 
-    function updateAssetLiquidateCollateralFactor(address cometProxy, address asset, uint64 newLiquidateCF) external governorOrMarketAdmin {
+    function updateAssetLiquidateCollateralFactor(
+        address cometProxy,
+        address asset,
+        uint64 newLiquidateCF
+    ) external governorOrMarketAdmin {
         uint assetIndex = getAssetIndex(cometProxy, asset);
         uint64 oldLiquidateCF = configuratorParams[cometProxy].assetConfigs[assetIndex].liquidateCollateralFactor;
         configuratorParams[cometProxy].assetConfigs[assetIndex].liquidateCollateralFactor = newLiquidateCF;
         emit UpdateAssetLiquidateCollateralFactor(cometProxy, asset, oldLiquidateCF, newLiquidateCF);
     }
 
-    function updateAssetLiquidationFactor(address cometProxy, address asset, uint64 newLiquidationFactor) external governorOrMarketAdmin {
+    function updateAssetLiquidationFactor(
+        address cometProxy,
+        address asset,
+        uint64 newLiquidationFactor
+    ) external governorOrMarketAdmin {
         uint assetIndex = getAssetIndex(cometProxy, asset);
         uint64 oldLiquidationFactor = configuratorParams[cometProxy].assetConfigs[assetIndex].liquidationFactor;
         configuratorParams[cometProxy].assetConfigs[assetIndex].liquidationFactor = newLiquidationFactor;
         emit UpdateAssetLiquidationFactor(cometProxy, asset, oldLiquidationFactor, newLiquidationFactor);
     }
 
-    function updateAssetSupplyCap(address cometProxy, address asset, uint128 newSupplyCap) external governorOrMarketAdmin {
+    function updateAssetSupplyCap(
+        address cometProxy,
+        address asset,
+        uint128 newSupplyCap
+    ) external governorOrMarketAdmin {
         uint assetIndex = getAssetIndex(cometProxy, asset);
         uint128 oldSupplyCap = configuratorParams[cometProxy].assetConfigs[assetIndex].supplyCap;
         configuratorParams[cometProxy].assetConfigs[assetIndex].supplyCap = newSupplyCap;
@@ -303,7 +383,9 @@ contract Configurator is ConfiguratorStorage {
             if (assetConfigs[i].asset == asset) {
                 return i;
             }
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
         revert AssetDoesNotExist();
     }

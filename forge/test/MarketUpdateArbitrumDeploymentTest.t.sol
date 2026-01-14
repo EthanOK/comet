@@ -13,7 +13,6 @@ import "../script/marketupdates/helpers/GovernanceHelper.sol";
 import "./MarketUpdateDeploymentBaseTest.sol";
 
 contract MarketUpdateArbitrumDeploymentTest is Test, MarketUpdateDeploymentBaseTest {
-
     MarketUpdateContractsDeployer.DeployedContracts deployedContracts;
 
     function setUp() public {
@@ -42,7 +41,6 @@ contract MarketUpdateArbitrumDeploymentTest is Test, MarketUpdateDeploymentBaseT
             ChainAddresses.Chain.ARBITRUM,
             MarketAddresses.ARBITRUM_USDCe_MARKET,
             deployedContracts
-
         );
     }
 
@@ -55,7 +53,6 @@ contract MarketUpdateArbitrumDeploymentTest is Test, MarketUpdateDeploymentBaseT
             ChainAddresses.Chain.ARBITRUM,
             MarketAddresses.ARBITRUM_USDT_MARKET,
             deployedContracts
-
         );
     }
 

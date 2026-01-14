@@ -41,7 +41,8 @@
     "audit:liquidator": "vendoza contracts/liquidator/vendor/manifest.json",
     "audit:vendor": "vendoza contracts/vendor/manifest.json",
     "slither:fn-clashes": "slither-check-upgradeability contracts/Configurator.sol Configurator --proxy-filename contracts/ConfiguratorProxy.sol --proxy-name ConfiguratorProxy",
-    "liquidation-bot": "hardhat run scripts/liquidation_bot/index.ts"
+    "liquidation-bot": "hardhat run scripts/liquidation_bot/index.ts",
+    "format-contracts": "prettier -w contracts/*.sol forge/test/**/*"
   },
   "keywords": [],
   "author": "Compound Finance",
@@ -67,6 +68,7 @@
     "@nomiclabs/hardhat-etherscan": "3.1.7",
     "@safe-global/safe-core-sdk": "^3.3.2",
     "@safe-global/safe-ethers-lib": "^1.9.2",
+    "@tenderly/hardhat-tenderly": "^2.5.2",
     "@typechain/ethers-v5": "^8.0.2",
     "@typechain/hardhat": "^3.0.0",
     "@types/chai": "^4.2.22",
@@ -88,13 +90,14 @@
     "mocha-junit-reporter": "^2.0.2",
     "mocha-multi-reporters": "hayesgm/mocha-multi-reporters#hayesgm/reporter-options-to-option",
     "nock": "^13.2.2",
+    "prettier": "^3.7.4",
+    "prettier-plugin-solidity": "^2.2.1",
     "sc-istanbul": "^0.4.5",
     "solhint": "^3.3.6",
     "ts-node": "^10.4.0",
     "typechain": "^6.0.2",
     "typescript": "^4.4.4",
-    "vendoza": "0.0.4",
-    "@tenderly/hardhat-tenderly": "^2.5.2"
+    "vendoza": "0.0.4"
   },
   "repository": "git@github.com:compound-finance/comet.git",
   "resolutions": {

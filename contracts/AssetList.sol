@@ -71,11 +71,11 @@ contract AssetList {
 
     /// @notice The number of assets this contract actually supports
     uint8 public immutable numAssets;
-    
+
     constructor(CometConfiguration.AssetConfig[] memory assetConfigs) {
         uint8 _numAssets = uint8(assetConfigs.length);
         numAssets = _numAssets;
-        
+
         (asset00_a, asset00_b) = getPackedAssetInternal(assetConfigs, 0);
         (asset01_a, asset01_b) = getPackedAssetInternal(assetConfigs, 1);
         (asset02_a, asset02_b) = getPackedAssetInternal(assetConfigs, 2);
@@ -115,7 +115,10 @@ contract AssetList {
      * @param i The index of the asset info to get
      * @return The packed asset info
      */
-    function getPackedAssetInternal(CometConfiguration.AssetConfig[] memory assetConfigs, uint i) internal view returns (uint256, uint256) {
+    function getPackedAssetInternal(
+        CometConfiguration.AssetConfig[] memory assetConfigs,
+        uint i
+    ) internal view returns (uint256, uint256) {
         CometConfiguration.AssetConfig memory assetConfig;
         if (i < assetConfigs.length) {
             assembly {
@@ -138,8 +141,10 @@ contract AssetList {
         if (IERC20NonStandard(asset).decimals() != decimals_) revert CometMainInterface.BadDecimals();
 
         // Ensure collateral factors are within range
-        if (assetConfig.borrowCollateralFactor >= assetConfig.liquidateCollateralFactor) revert CometMainInterface.BorrowCFTooLarge();
-        if (assetConfig.liquidateCollateralFactor > MAX_COLLATERAL_FACTOR) revert CometMainInterface.LiquidateCFTooLarge();
+        if (assetConfig.borrowCollateralFactor >= assetConfig.liquidateCollateralFactor)
+            revert CometMainInterface.BorrowCFTooLarge();
+        if (assetConfig.liquidateCollateralFactor > MAX_COLLATERAL_FACTOR)
+            revert CometMainInterface.LiquidateCFTooLarge();
 
         unchecked {
             // Keep 4 decimals for each factor
@@ -154,13 +159,11 @@ contract AssetList {
             // Keep whole units of asset for supply cap
             uint64 supplyCap = uint64(assetConfig.supplyCap / (10 ** decimals_));
 
-            uint256 word_a = (uint160(asset) << 0 |
-                              uint256(borrowCollateralFactor) << 160 |
-                              uint256(liquidateCollateralFactor) << 176 |
-                              uint256(liquidationFactor) << 192);
-            uint256 word_b = (uint160(priceFeed) << 0 |
-                              uint256(decimals_) << 160 |
-                              uint256(supplyCap) << 168);
+            uint256 word_a = ((uint160(asset) << 0) |
+                (uint256(borrowCollateralFactor) << 160) |
+                (uint256(liquidateCollateralFactor) << 176) |
+                (uint256(liquidationFactor) << 192));
+            uint256 word_b = ((uint160(priceFeed) << 0) | (uint256(decimals_) << 160) | (uint256(supplyCap) << 168));
 
             return (word_a, word_b);
         }
@@ -175,99 +178,99 @@ contract AssetList {
         if (i >= numAssets) revert CometMainInterface.BadAsset();
         uint256 word_a;
         uint256 word_b;
-        if(i == 0){
+        if (i == 0) {
             word_a = asset00_a;
             word_b = asset00_b;
         }
-        if(i == 1){
+        if (i == 1) {
             word_a = asset01_a;
             word_b = asset01_b;
         }
-        if(i == 2){
+        if (i == 2) {
             word_a = asset02_a;
             word_b = asset02_b;
         }
-        if(i == 3){
+        if (i == 3) {
             word_a = asset03_a;
             word_b = asset03_b;
         }
-        if(i == 4){
+        if (i == 4) {
             word_a = asset04_a;
             word_b = asset04_b;
         }
-        if(i == 5){
+        if (i == 5) {
             word_a = asset05_a;
             word_b = asset05_b;
         }
-        if(i == 6){
+        if (i == 6) {
             word_a = asset06_a;
             word_b = asset06_b;
         }
-        if(i == 7){
+        if (i == 7) {
             word_a = asset07_a;
             word_b = asset07_b;
         }
-        if(i == 8){
+        if (i == 8) {
             word_a = asset08_a;
             word_b = asset08_b;
         }
-        if(i == 9){
+        if (i == 9) {
             word_a = asset09_a;
             word_b = asset09_b;
         }
-        if(i == 10){
+        if (i == 10) {
             word_a = asset10_a;
             word_b = asset10_b;
         }
-        if(i == 11){
+        if (i == 11) {
             word_a = asset11_a;
             word_b = asset11_b;
         }
-        if(i == 12){
+        if (i == 12) {
             word_a = asset12_a;
             word_b = asset12_b;
         }
-        if(i == 13){
+        if (i == 13) {
             word_a = asset13_a;
             word_b = asset13_b;
         }
-        if(i == 14){
+        if (i == 14) {
             word_a = asset14_a;
             word_b = asset14_b;
         }
-        if(i == 15){
+        if (i == 15) {
             word_a = asset15_a;
             word_b = asset15_b;
         }
-        if(i == 16){
+        if (i == 16) {
             word_a = asset16_a;
             word_b = asset16_b;
         }
-        if(i == 17){
+        if (i == 17) {
             word_a = asset17_a;
             word_b = asset17_b;
         }
-        if(i == 18){
+        if (i == 18) {
             word_a = asset18_a;
             word_b = asset18_b;
         }
-        if(i == 19){
+        if (i == 19) {
             word_a = asset19_a;
             word_b = asset19_b;
         }
-        if(i == 20){
+        if (i == 20) {
             word_a = asset20_a;
             word_b = asset20_b;
         }
-        if(i == 21){
+        if (i == 21) {
             word_a = asset21_a;
             word_b = asset21_b;
         }
-        if(i == 22){
+        if (i == 22) {
             word_a = asset22_a;
             word_b = asset22_b;
         }
-        if(i == 23){
+        if (i == 23) {
             word_a = asset23_a;
             word_b = asset23_b;
         }
@@ -283,15 +286,16 @@ contract AssetList {
         uint64 scale = uint64(10 ** decimals_);
         uint128 supplyCap = uint128(((word_b >> 168) & type(uint64).max) * scale);
 
-        return CometCore.AssetInfo({
-            offset: i,
-            asset: asset,
-            priceFeed: priceFeed,
-            scale: scale,
-            borrowCollateralFactor: borrowCollateralFactor,
-            liquidateCollateralFactor: liquidateCollateralFactor,
-            liquidationFactor: liquidationFactor,
-            supplyCap: supplyCap
-         });
+        return
+            CometCore.AssetInfo({
+                offset: i,
+                asset: asset,
+                priceFeed: priceFeed,
+                scale: scale,
+                borrowCollateralFactor: borrowCollateralFactor,
+                liquidateCollateralFactor: liquidateCollateralFactor,
+                liquidationFactor: liquidationFactor,
+                supplyCap: supplyCap
+            });
     }
 }

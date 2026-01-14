@@ -110,7 +110,9 @@ contract CometRewards {
         for (uint i = 0; i < users.length; ) {
             rewardsClaimed[comet][users[i]] = claimedAmounts[i];
             emit RewardsClaimedSet(users[i], comet, claimedAmounts[i]);
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
     }
 
@@ -212,7 +214,7 @@ contract CometRewards {
         } else {
             accrued /= config.rescaleFactor;
         }
-        return accrued * config.multiplier / FACTOR_SCALE;
+        return (accrued * config.multiplier) / FACTOR_SCALE;
     }
 
     /**

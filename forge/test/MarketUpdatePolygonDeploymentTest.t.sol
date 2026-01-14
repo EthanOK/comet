@@ -13,7 +13,6 @@ import "../script/marketupdates/helpers/GovernanceHelper.sol";
 import "./MarketUpdateDeploymentBaseTest.sol";
 
 contract MarketUpdatePolygonDeploymentTest is Test, MarketUpdateDeploymentBaseTest {
-
     MarketUpdateContractsDeployer.DeployedContracts deployedContracts;
 
     function setUp() public {

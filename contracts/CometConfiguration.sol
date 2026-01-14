@@ -17,7 +17,6 @@ contract CometConfiguration {
         address baseToken;
         address baseTokenPriceFeed;
         address extensionDelegate;
-
         uint64 supplyKink;
         uint64 supplyPerYearInterestRateSlopeLow;
         uint64 supplyPerYearInterestRateSlopeHigh;
@@ -33,7 +32,6 @@ contract CometConfiguration {
         uint104 baseMinForRewards;
         uint104 baseBorrowMin;
         uint104 targetReserves;
-
         AssetConfig[] assetConfigs;
     }
 

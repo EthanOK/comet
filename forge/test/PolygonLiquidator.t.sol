@@ -84,8 +84,8 @@ contract PolygonLiquidatorTest is Test {
             supplyCap: 0
         });
 
-        comet = new Comet(CometConfiguration.Configuration(
-            {
+        comet = new Comet(
+            CometConfiguration.Configuration({
                 governor: TIMELOCK,
                 pauseGuardian: GNOSIS_SAFE,
                 baseToken: USDC,
@@ -107,8 +107,8 @@ contract PolygonLiquidatorTest is Test {
                 baseBorrowMin: 100e6,
                 targetReserves: 5000000e6,
                 assetConfigs: assetConfigs
-            }
-        ));
+            })
+        );
 
         // contracts
         vm.label(UNISWAP_V3_FACTORY, "UniswapV3 Factory");
@@ -193,7 +193,7 @@ contract PolygonLiquidatorTest is Test {
         uint256[] memory maxAmountsToPurchase = new uint256[](1);
         maxAmountsToPurchase[0] = type(uint256).max;
 
-        address[] memory assets =  new address[](1);
+        address[] memory assets = new address[](1);
         assets[0] = asset;
 
         vm.prank(whale);
@@ -202,12 +202,12 @@ contract PolygonLiquidatorTest is Test {
         liquidator.absorbAndArbitrage(
             address(comet),
             liquidatableAccounts, // liquidatableAccounts
-            assets,               // assets
-            poolConfigs,          // poolConfigs
+            assets, // assets
+            poolConfigs, // poolConfigs
             maxAmountsToPurchase, // maxAmountsToPurchase
-            METADEX,              // flash loan pair token
-            3000,                 // flash loan pool fee
-            10e6                  // liquidation threshold
+            METADEX, // flash loan pair token
+            3000, // flash loan pool fee
+            10e6 // liquidation threshold
         );
 
         // expect that there is only dust (< 1 unit) left of the asset

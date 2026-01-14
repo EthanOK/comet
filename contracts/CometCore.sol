@@ -88,14 +88,14 @@ abstract contract CometCore is CometConfiguration, CometStorage, CometMath {
      * @dev The principal amount projected forward by the supply index
      */
     function presentValueSupply(uint64 baseSupplyIndex_, uint104 principalValue_) internal pure returns (uint256) {
-        return uint256(principalValue_) * baseSupplyIndex_ / BASE_INDEX_SCALE;
+        return (uint256(principalValue_) * baseSupplyIndex_) / BASE_INDEX_SCALE;
     }
 
     /**
      * @dev The principal amount projected forward by the borrow index
      */
     function presentValueBorrow(uint64 baseBorrowIndex_, uint104 principalValue_) internal pure returns (uint256) {
-        return uint256(principalValue_) * baseBorrowIndex_ / BASE_INDEX_SCALE;
+        return (uint256(principalValue_) * baseBorrowIndex_) / BASE_INDEX_SCALE;
     }
 
     /**

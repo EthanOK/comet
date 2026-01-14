@@ -69,8 +69,8 @@ contract OnChainLiquidatorTest is Test {
             supplyCap: 0
         });
 
-        comet = new Comet(CometConfiguration.Configuration(
-            {
+        comet = new Comet(
+            CometConfiguration.Configuration({
                 governor: TIMELOCK,
                 pauseGuardian: GNOSIS_SAFE,
                 baseToken: WETH9,
@@ -92,8 +92,8 @@ contract OnChainLiquidatorTest is Test {
                 baseBorrowMin: 100e6,
                 targetReserves: 5000000e6,
                 assetConfigs: assetConfigs
-            }
-        ));
+            })
+        );
 
         // contracts
         vm.label(UNISWAP_V3_FACTORY, "UniswapV3 Factory");
@@ -176,7 +176,7 @@ contract OnChainLiquidatorTest is Test {
         uint256[] memory maxAmountsToPurchase = new uint256[](1);
         maxAmountsToPurchase[0] = type(uint256).max;
 
-        address[] memory assets =  new address[](1);
+        address[] memory assets = new address[](1);
         assets[0] = asset;
 
         vm.prank(whale);

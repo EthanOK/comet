@@ -67,10 +67,17 @@ interface IGovernorBravo {
     function queue(uint256 proposalId) external;
     function execute(uint256 proposalId) external;
     function castVote(uint256 proposalId, uint8 support) external returns (uint256 balance);
-    function proposalDetails(uint proposalId) external view returns (address[] memory targets, uint[] memory values, bytes[] memory calldatas, bytes32 descriptionHash);
+    function proposalDetails(
+        uint proposalId
+    )
+        external
+        view
+        returns (address[] memory targets, uint[] memory values, bytes[] memory calldatas, bytes32 descriptionHash);
     function proposalSnapshot(uint256 proposalId) external view returns (uint256);
     function quorum(uint256 timepoint) external view returns (uint256);
-    function proposalVotes(uint256 proposalId) external view returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes);
+    function proposalVotes(
+        uint256 proposalId
+    ) external view returns (uint256 againstVotes, uint256 forVotes, uint256 abstainVotes);
     function proposalDeadline(uint256 proposalId) external view returns (uint256);
     function castVoteWithReason(uint256 proposalId, uint8 support, string calldata reason) external returns (uint256);
 }

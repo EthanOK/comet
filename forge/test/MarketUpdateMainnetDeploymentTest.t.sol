@@ -13,7 +13,6 @@ import "../script/marketupdates/helpers/GovernanceHelper.sol";
 import "./MarketUpdateDeploymentBaseTest.sol";
 
 contract MarketUpdateMainnetDeploymentTest is MarketUpdateDeploymentBaseTest {
-
     MarketUpdateContractsDeployer.DeployedContracts internal deployedContracts;
     ChainAddresses.ChainAddressesStruct internal chainAddresses;
 
@@ -26,38 +25,19 @@ contract MarketUpdateMainnetDeploymentTest is MarketUpdateDeploymentBaseTest {
     function test_UsdcDeployment() public {
         console.log("Create Supply Kink Proposal for USDC Market and verify after execution");
 
-        updateAndVerifySupplyKink(
-            vm,
-            "USDC",
-            MarketAddresses.MAINNET_USDC_MARKET,
-            chainAddresses,
-            deployedContracts
-        );
+        updateAndVerifySupplyKink(vm, "USDC", MarketAddresses.MAINNET_USDC_MARKET, chainAddresses, deployedContracts);
     }
 
     function test_UsdtDeployment() public {
         console.log("Create Supply Kink Proposal for USDT Market and verify after execution");
 
-        updateAndVerifySupplyKink(
-            vm,
-            "USDT",
-            MarketAddresses.MAINNET_USDT_MARKET,
-            chainAddresses,
-            deployedContracts
-
-        );
+        updateAndVerifySupplyKink(vm, "USDT", MarketAddresses.MAINNET_USDT_MARKET, chainAddresses, deployedContracts);
     }
 
     function test_EthDeployment() public {
         console.log("Create Supply Kink Proposal for ETH Market and verify after execution");
 
-        updateAndVerifySupplyKink(
-            vm,
-            "ETH",
-            MarketAddresses.MAINNET_ETH_MARKET,
-            chainAddresses,
-            deployedContracts
-        );
+        updateAndVerifySupplyKink(vm, "ETH", MarketAddresses.MAINNET_ETH_MARKET, chainAddresses, deployedContracts);
     }
 
     function test_WstEthDeployment() public {

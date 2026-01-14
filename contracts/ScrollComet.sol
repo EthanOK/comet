@@ -14,88 +14,88 @@ contract ScrollComet is CometMainInterface {
     /** General configuration constants **/
 
     /// @notice The admin of the protocol
-    address public override immutable governor;
+    address public immutable override governor;
 
     /// @notice The account which may trigger pauses
-    address public override immutable pauseGuardian;
+    address public immutable override pauseGuardian;
 
     /// @notice The address of the base token contract
-    address public override immutable baseToken;
+    address public immutable override baseToken;
 
     /// @notice The address of the price feed for the base token
-    address public override immutable baseTokenPriceFeed;
+    address public immutable override baseTokenPriceFeed;
 
     /// @notice The address of the extension contract delegate
-    address public override immutable extensionDelegate;
+    address public immutable override extensionDelegate;
 
     /// @notice The point in the supply rates separating the low interest rate slope and the high interest rate slope (factor)
     /// @dev uint64
-    uint public override immutable supplyKink;
+    uint public immutable override supplyKink;
 
     /// @notice Per second supply interest rate slope applied when utilization is below kink (factor)
     /// @dev uint64
-    uint public override immutable supplyPerSecondInterestRateSlopeLow;
+    uint public immutable override supplyPerSecondInterestRateSlopeLow;
 
     /// @notice Per second supply interest rate slope applied when utilization is above kink (factor)
     /// @dev uint64
-    uint public override immutable supplyPerSecondInterestRateSlopeHigh;
+    uint public immutable override supplyPerSecondInterestRateSlopeHigh;
 
     /// @notice Per second supply base interest rate (factor)
     /// @dev uint64
-    uint public override immutable supplyPerSecondInterestRateBase;
+    uint public immutable override supplyPerSecondInterestRateBase;
 
     /// @notice The point in the borrow rate separating the low interest rate slope and the high interest rate slope (factor)
     /// @dev uint64
-    uint public override immutable borrowKink;
+    uint public immutable override borrowKink;
 
     /// @notice Per second borrow interest rate slope applied when utilization is below kink (factor)
     /// @dev uint64
-    uint public override immutable borrowPerSecondInterestRateSlopeLow;
+    uint public immutable override borrowPerSecondInterestRateSlopeLow;
 
     /// @notice Per second borrow interest rate slope applied when utilization is above kink (factor)
     /// @dev uint64
-    uint public override immutable borrowPerSecondInterestRateSlopeHigh;
+    uint public immutable override borrowPerSecondInterestRateSlopeHigh;
 
     /// @notice Per second borrow base interest rate (factor)
     /// @dev uint64
-    uint public override immutable borrowPerSecondInterestRateBase;
+    uint public immutable override borrowPerSecondInterestRateBase;
 
     /// @notice The fraction of the liquidation penalty that goes to buyers of collateral instead of the protocol
     /// @dev uint64
-    uint public override immutable storeFrontPriceFactor;
+    uint public immutable override storeFrontPriceFactor;
 
     /// @notice The scale for base token (must be less than 18 decimals)
     /// @dev uint64
-    uint public override immutable baseScale;
+    uint public immutable override baseScale;
 
     /// @notice The scale for reward tracking
     /// @dev uint64
-    uint public override immutable trackingIndexScale;
+    uint public immutable override trackingIndexScale;
 
     /// @notice The speed at which supply rewards are tracked (in trackingIndexScale)
     /// @dev uint64
-    uint public override immutable baseTrackingSupplySpeed;
+    uint public immutable override baseTrackingSupplySpeed;
 
     /// @notice The speed at which borrow rewards are tracked (in trackingIndexScale)
     /// @dev uint64
-    uint public override immutable baseTrackingBorrowSpeed;
+    uint public immutable override baseTrackingBorrowSpeed;
 
     /// @notice The minimum amount of base principal wei for rewards to accrue
     /// @dev This must be large enough so as to prevent division by base wei from overflowing the 64 bit indices
     /// @dev uint104
-    uint public override immutable baseMinForRewards;
+    uint public immutable override baseMinForRewards;
 
     /// @notice The minimum base amount required to initiate a borrow
-    uint public override immutable baseBorrowMin;
+    uint public immutable override baseBorrowMin;
 
     /// @notice The minimum base token reserves which must be held before collateral is hodled
-    uint public override immutable targetReserves;
+    uint public immutable override targetReserves;
 
     /// @notice The number of decimals for wrapped base token
-    uint8 public override immutable decimals;
+    uint8 public immutable override decimals;
 
     /// @notice The number of assets this contract actually supports
-    uint8 public override immutable numAssets;
+    uint8 public immutable override numAssets;
 
     /// @notice Factor to divide by when accruing rewards in order to preserve 6 decimals (i.e. baseScale / 1e6)
     uint internal immutable accrualDescaleFactor;
@@ -205,7 +205,7 @@ contract ScrollComet is CometMainInterface {
      * @notice Initialize storage for the contract
      * @dev Can be used from constructor or proxy
      */
-    function initializeStorage() override external {
+    function initializeStorage() external override {
         if (lastAccrualTime != 0) revert AlreadyInitialized();
 
         // Initialize aggregates
@@ -221,7 +221,10 @@ contract ScrollComet is CometMainInterface {
     /**
      * @dev Checks and gets the packed asset info for storage
      */
-    function getPackedAssetInternal(AssetConfig[] memory assetConfigs, uint i) internal view returns (uint256, uint256) {
+    function getPackedAssetInternal(
+        AssetConfig[] memory assetConfigs,
+        uint i
+    ) internal view returns (uint256, uint256) {
         AssetConfig memory assetConfig;
         if (i < assetConfigs.length) {
             assembly {
@@ -260,13 +263,11 @@ contract ScrollComet is CometMainInterface {
             // Keep whole units of asset for supply cap
             uint64 supplyCap = uint64(assetConfig.supplyCap / (10 ** decimals_));
 
-            uint256 word_a = (uint160(asset) << 0 |
-                              uint256(borrowCollateralFactor) << 160 |
-                              uint256(liquidateCollateralFactor) << 176 |
-                              uint256(liquidationFactor) << 192);
-            uint256 word_b = (uint160(priceFeed) << 0 |
-                              uint256(decimals_) << 160 |
-                              uint256(supplyCap) << 168);
+            uint256 word_a = ((uint160(asset) << 0) |
+                (uint256(borrowCollateralFactor) << 160) |
+                (uint256(liquidateCollateralFactor) << 176) |
+                (uint256(liquidationFactor) << 192));
+            uint256 word_b = ((uint160(priceFeed) << 0) | (uint256(decimals_) << 160) | (uint256(supplyCap) << 168));
 
             return (word_a, word_b);
         }
@@ -277,7 +278,7 @@ contract ScrollComet is CometMainInterface {
      * @param i The index of the asset info to get
      * @return The asset info object
      */
-    function getAssetInfo(uint8 i) override public view returns (AssetInfo memory) {
+    function getAssetInfo(uint8 i) public view override returns (AssetInfo memory) {
         if (i >= numAssets) revert BadAsset();
 
         uint256 word_a;
@@ -343,28 +344,31 @@ contract ScrollComet is CometMainInterface {
         uint64 scale = uint64(10 ** decimals_);
         uint128 supplyCap = uint128(((word_b >> 168) & type(uint64).max) * scale);
 
-        return AssetInfo({
-            offset: i,
-            asset: asset,
-            priceFeed: priceFeed,
-            scale: scale,
-            borrowCollateralFactor: borrowCollateralFactor,
-            liquidateCollateralFactor: liquidateCollateralFactor,
-            liquidationFactor: liquidationFactor,
-            supplyCap: supplyCap
-         });
+        return
+            AssetInfo({
+                offset: i,
+                asset: asset,
+                priceFeed: priceFeed,
+                scale: scale,
+                borrowCollateralFactor: borrowCollateralFactor,
+                liquidateCollateralFactor: liquidateCollateralFactor,
+                liquidationFactor: liquidationFactor,
+                supplyCap: supplyCap
+            });
     }
 
     /**
      * @dev Determine index of asset that matches given address
      */
-    function getAssetInfoByAddress(address asset) override public view returns (AssetInfo memory) {
+    function getAssetInfoByAddress(address asset) public view override returns (AssetInfo memory) {
         for (uint8 i = 0; i < numAssets; ) {
             AssetInfo memory assetInfo = getAssetInfo(i);
             if (assetInfo.asset == asset) {
                 return assetInfo;
             }
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
         revert BadAsset();
     }
@@ -372,8 +376,8 @@ contract ScrollComet is CometMainInterface {
     /**
      * @return The current timestamp
      **/
-    function getNowInternal() virtual internal view returns (uint40) {
-        if (block.timestamp >= 2**40) revert TimestampTooLarge();
+    function getNowInternal() internal view virtual returns (uint40) {
+        if (block.timestamp >= 2 ** 40) revert TimestampTooLarge();
         return uint40(block.timestamp);
     }
 
@@ -414,7 +418,7 @@ contract ScrollComet is CometMainInterface {
     /**
      * @notice Accrue interest and rewards for an account
      **/
-    function accrueAccount(address account) override external {
+    function accrueAccount(address account) external override {
         accrueInternal();
 
         UserBasic memory basic = userBasic[account];
@@ -426,13 +430,19 @@ contract ScrollComet is CometMainInterface {
      * @param utilization The utilization to check the supply rate for
      * @return The per second supply rate at `utilization`
      */
-    function getSupplyRate(uint utilization) override public view returns (uint64) {
+    function getSupplyRate(uint utilization) public view override returns (uint64) {
         if (utilization <= supplyKink) {
             // interestRateBase + interestRateSlopeLow * utilization
-            return safe64(supplyPerSecondInterestRateBase + mulFactor(supplyPerSecondInterestRateSlopeLow, utilization));
+            return
+                safe64(supplyPerSecondInterestRateBase + mulFactor(supplyPerSecondInterestRateSlopeLow, utilization));
         } else {
             // interestRateBase + interestRateSlopeLow * kink + interestRateSlopeHigh * (utilization - kink)
-            return safe64(supplyPerSecondInterestRateBase + mulFactor(supplyPerSecondInterestRateSlopeLow, supplyKink) + mulFactor(supplyPerSecondInterestRateSlopeHigh, (utilization - supplyKink)));
+            return
+                safe64(
+                    supplyPerSecondInterestRateBase +
+                        mulFactor(supplyPerSecondInterestRateSlopeLow, supplyKink) +
+                        mulFactor(supplyPerSecondInterestRateSlopeHigh, (utilization - supplyKink))
+                );
         }
     }
 
@@ -441,13 +451,19 @@ contract ScrollComet is CometMainInterface {
      * @param utilization The utilization to check the borrow rate for
      * @return The per second borrow rate at `utilization`
      */
-    function getBorrowRate(uint utilization) override public view returns (uint64) {
+    function getBorrowRate(uint utilization) public view override returns (uint64) {
         if (utilization <= borrowKink) {
             // interestRateBase + interestRateSlopeLow * utilization
-            return safe64(borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, utilization));
+            return
+                safe64(borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, utilization));
         } else {
             // interestRateBase + interestRateSlopeLow * kink + interestRateSlopeHigh * (utilization - kink)
-            return safe64(borrowPerSecondInterestRateBase + mulFactor(borrowPerSecondInterestRateSlopeLow, borrowKink) + mulFactor(borrowPerSecondInterestRateSlopeHigh, (utilization - borrowKink)));
+            return
+                safe64(
+                    borrowPerSecondInterestRateBase +
+                        mulFactor(borrowPerSecondInterestRateSlopeLow, borrowKink) +
+                        mulFactor(borrowPerSecondInterestRateSlopeHigh, (utilization - borrowKink))
+                );
         }
     }
 
@@ -455,13 +471,13 @@ contract ScrollComet is CometMainInterface {
      * @dev Note: Does not accrue interest first
      * @return The utilization rate of the base asset
      */
-    function getUtilization() override public view returns (uint) {
+    function getUtilization() public view override returns (uint) {
         uint totalSupply_ = presentValueSupply(baseSupplyIndex, totalSupplyBase);
         uint totalBorrow_ = presentValueBorrow(baseBorrowIndex, totalBorrowBase);
         if (totalSupply_ == 0) {
             return 0;
         } else {
-            return totalBorrow_ * FACTOR_SCALE / totalSupply_;
+            return (totalBorrow_ * FACTOR_SCALE) / totalSupply_;
         }
     }
 
@@ -470,7 +486,7 @@ contract ScrollComet is CometMainInterface {
      * @param priceFeed The address of a price feed
      * @return The price, scaled by `PRICE_SCALE`
      */
-    function getPrice(address priceFeed) override public view returns (uint256) {
+    function getPrice(address priceFeed) public view override returns (uint256) {
         (, int price, , , ) = IPriceFeed(priceFeed).latestRoundData();
         if (price <= 0) revert BadPrice();
         return uint256(price);
@@ -481,14 +497,14 @@ contract ScrollComet is CometMainInterface {
      * @dev Note: Reverts if collateral reserves are somehow negative, which should not be possible
      * @param asset The collateral asset
      */
-    function getCollateralReserves(address asset) override public view returns (uint) {
+    function getCollateralReserves(address asset) public view override returns (uint) {
         return ERC20(asset).balanceOf(address(this)) - totalsCollateral[asset].totalSupplyAsset;
     }
 
     /**
      * @notice Gets the total amount of protocol reserves of the base asset
      */
-    function getReserves() override public view returns (int) {
+    function getReserves() public view override returns (int) {
         (uint64 baseSupplyIndex_, uint64 baseBorrowIndex_) = accruedInterestIndices(getNowInternal() - lastAccrualTime);
         uint balance = ERC20(baseToken).balanceOf(address(this));
         uint totalSupply_ = presentValueSupply(baseSupplyIndex_, totalSupplyBase);
@@ -501,7 +517,7 @@ contract ScrollComet is CometMainInterface {
      * @param account The address to check
      * @return Whether the account is minimally collateralized enough to borrow
      */
-    function isBorrowCollateralized(address account) override public view returns (bool) {
+    function isBorrowCollateralized(address account) public view override returns (bool) {
         int104 principal = userBasic[account].principal;
 
         if (principal >= 0) {
@@ -509,11 +525,7 @@ contract ScrollComet is CometMainInterface {
         }
 
         uint16 assetsIn = userBasic[account].assetsIn;
-        int liquidity = signedMulPrice(
-            presentValue(principal),
-            getPrice(baseTokenPriceFeed),
-            uint64(baseScale)
-        );
+        int liquidity = signedMulPrice(presentValue(principal), getPrice(baseTokenPriceFeed), uint64(baseScale));
 
         for (uint8 i = 0; i < numAssets; ) {
             if (isInAsset(assetsIn, i)) {
@@ -527,12 +539,11 @@ contract ScrollComet is CometMainInterface {
                     getPrice(asset.priceFeed),
                     asset.scale
                 );
-                liquidity += signed256(mulFactor(
-                    newAmount,
-                    asset.borrowCollateralFactor
-                ));
+                liquidity += signed256(mulFactor(newAmount, asset.borrowCollateralFactor));
             }
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         return liquidity >= 0;
@@ -543,7 +554,7 @@ contract ScrollComet is CometMainInterface {
      * @param account The address to check
      * @return Whether the account is minimally collateralized enough to not be liquidated
      */
-    function isLiquidatable(address account) override public view returns (bool) {
+    function isLiquidatable(address account) public view override returns (bool) {
         int104 principal = userBasic[account].principal;
 
         if (principal >= 0) {
@@ -551,11 +562,7 @@ contract ScrollComet is CometMainInterface {
         }
 
         uint16 assetsIn = userBasic[account].assetsIn;
-        int liquidity = signedMulPrice(
-            presentValue(principal),
-            getPrice(baseTokenPriceFeed),
-            uint64(baseScale)
-        );
+        int liquidity = signedMulPrice(presentValue(principal), getPrice(baseTokenPriceFeed), uint64(baseScale));
 
         for (uint8 i = 0; i < numAssets; ) {
             if (isInAsset(assetsIn, i)) {
@@ -569,12 +576,11 @@ contract ScrollComet is CometMainInterface {
                     getPrice(asset.priceFeed),
                     asset.scale
                 );
-                liquidity += signed256(mulFactor(
-                    newAmount,
-                    asset.liquidateCollateralFactor
-                ));
+                liquidity += signed256(mulFactor(newAmount, asset.liquidateCollateralFactor));
             }
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         return liquidity < 0;
@@ -599,7 +605,10 @@ contract ScrollComet is CometMainInterface {
     /**
      * @dev The change in principal broken into withdraw and borrow amounts
      */
-    function withdrawAndBorrowAmount(int104 oldPrincipal, int104 newPrincipal) internal pure returns (uint104, uint104) {
+    function withdrawAndBorrowAmount(
+        int104 oldPrincipal,
+        int104 newPrincipal
+    ) internal pure returns (uint104, uint104) {
         // If the new principal is greater than the old principal, then no amount has been withdrawn or borrowed
         if (newPrincipal > oldPrincipal) return (0, 0);
 
@@ -626,7 +635,7 @@ contract ScrollComet is CometMainInterface {
         bool withdrawPaused,
         bool absorbPaused,
         bool buyPaused
-    ) override external {
+    ) external override {
         if (msg.sender != governor && msg.sender != pauseGuardian) revert Unauthorized();
 
         pauseFlags =
@@ -643,35 +652,35 @@ contract ScrollComet is CometMainInterface {
     /**
      * @return Whether or not supply actions are paused
      */
-    function isSupplyPaused() override public view returns (bool) {
+    function isSupplyPaused() public view override returns (bool) {
         return toBool(pauseFlags & (uint8(1) << PAUSE_SUPPLY_OFFSET));
     }
 
     /**
      * @return Whether or not transfer actions are paused
      */
-    function isTransferPaused() override public view returns (bool) {
+    function isTransferPaused() public view override returns (bool) {
         return toBool(pauseFlags & (uint8(1) << PAUSE_TRANSFER_OFFSET));
     }
 
     /**
      * @return Whether or not withdraw actions are paused
      */
-    function isWithdrawPaused() override public view returns (bool) {
+    function isWithdrawPaused() public view override returns (bool) {
         return toBool(pauseFlags & (uint8(1) << PAUSE_WITHDRAW_OFFSET));
     }
 
     /**
      * @return Whether or not absorb actions are paused
      */
-    function isAbsorbPaused() override public view returns (bool) {
+    function isAbsorbPaused() public view override returns (bool) {
         return toBool(pauseFlags & (uint8(1) << PAUSE_ABSORB_OFFSET));
     }
 
     /**
      * @return Whether or not buy actions are paused
      */
-    function isBuyPaused() override public view returns (bool) {
+    function isBuyPaused() public view override returns (bool) {
         return toBool(pauseFlags & (uint8(1) << PAUSE_BUY_OFFSET));
     }
 
@@ -679,35 +688,35 @@ contract ScrollComet is CometMainInterface {
      * @dev Multiply a number by a factor
      */
     function mulFactor(uint n, uint factor) internal pure returns (uint) {
-        return n * factor / FACTOR_SCALE;
+        return (n * factor) / FACTOR_SCALE;
     }
 
     /**
      * @dev Divide a number by an amount of base
      */
     function divBaseWei(uint n, uint baseWei) internal view returns (uint) {
-        return n * baseScale / baseWei;
+        return (n * baseScale) / baseWei;
     }
 
     /**
      * @dev Multiply a `fromScale` quantity by a price, returning a common price quantity
      */
     function mulPrice(uint n, uint price, uint64 fromScale) internal pure returns (uint) {
-        return n * price / fromScale;
+        return (n * price) / fromScale;
     }
 
     /**
      * @dev Multiply a signed `fromScale` quantity by a price, returning a common price quantity
      */
     function signedMulPrice(int n, uint price, uint64 fromScale) internal pure returns (int) {
-        return n * signed256(price) / int256(uint256(fromScale));
+        return (n * signed256(price)) / int256(uint256(fromScale));
     }
 
     /**
      * @dev Divide a common price quantity by a price, returning a `toScale` quantity
      */
     function divPrice(uint n, uint price, uint64 toScale) internal pure returns (uint) {
-        return n * toScale / price;
+        return (n * toScale) / price;
     }
 
     /**
@@ -744,10 +753,14 @@ contract ScrollComet is CometMainInterface {
 
         if (principal >= 0) {
             uint indexDelta = uint256(trackingSupplyIndex - basic.baseTrackingIndex);
-            basic.baseTrackingAccrued += safe64(uint104(principal) * indexDelta / trackingIndexScale / accrualDescaleFactor);
+            basic.baseTrackingAccrued += safe64(
+                (uint104(principal) * indexDelta) / trackingIndexScale / accrualDescaleFactor
+            );
         } else {
             uint indexDelta = uint256(trackingBorrowIndex - basic.baseTrackingIndex);
-            basic.baseTrackingAccrued += safe64(uint104(-principal) * indexDelta / trackingIndexScale / accrualDescaleFactor);
+            basic.baseTrackingAccrued += safe64(
+                (uint104(-principal) * indexDelta) / trackingIndexScale / accrualDescaleFactor
+            );
         }
 
         if (principalNew >= 0) {
@@ -780,7 +793,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to supply
      * @param amount The quantity to supply
      */
-    function supply(address asset, uint amount) override external {
+    function supply(address asset, uint amount) external override {
         return supplyInternal(msg.sender, msg.sender, msg.sender, asset, amount);
     }
 
@@ -790,7 +803,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to supply
      * @param amount The quantity to supply
      */
-    function supplyTo(address dst, address asset, uint amount) override external {
+    function supplyTo(address dst, address asset, uint amount) external override {
         return supplyInternal(msg.sender, msg.sender, dst, asset, amount);
     }
 
@@ -801,7 +814,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to supply
      * @param amount The quantity to supply
      */
-    function supplyFrom(address from, address dst, address asset, uint amount) override external {
+    function supplyFrom(address from, address dst, address asset, uint amount) external override {
         return supplyInternal(msg.sender, from, dst, asset, amount);
     }
 
@@ -878,7 +891,7 @@ contract ScrollComet is CometMainInterface {
      * @param amount The quantity to transfer
      * @return true
      */
-    function transfer(address dst, uint amount) override external returns (bool) {
+    function transfer(address dst, uint amount) external override returns (bool) {
         transferInternal(msg.sender, msg.sender, dst, baseToken, amount);
         return true;
     }
@@ -890,7 +903,7 @@ contract ScrollComet is CometMainInterface {
      * @param amount The quantity to transfer
      * @return true
      */
-    function transferFrom(address src, address dst, uint amount) override external returns (bool) {
+    function transferFrom(address src, address dst, uint amount) external override returns (bool) {
         transferInternal(msg.sender, src, dst, baseToken, amount);
         return true;
     }
@@ -901,7 +914,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to transfer
      * @param amount The quantity to transfer
      */
-    function transferAsset(address dst, address asset, uint amount) override external {
+    function transferAsset(address dst, address asset, uint amount) external override {
         return transferInternal(msg.sender, msg.sender, dst, asset, amount);
     }
 
@@ -912,7 +925,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to transfer
      * @param amount The quantity to transfer
      */
-    function transferAssetFrom(address src, address dst, address asset, uint amount) override external {
+    function transferAssetFrom(address src, address dst, address asset, uint amount) external override {
         return transferInternal(msg.sender, src, dst, asset, amount);
     }
 
@@ -1002,7 +1015,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to withdraw
      * @param amount The quantity to withdraw
      */
-    function withdraw(address asset, uint amount) override external {
+    function withdraw(address asset, uint amount) external override {
         return withdrawInternal(msg.sender, msg.sender, msg.sender, asset, amount);
     }
 
@@ -1012,7 +1025,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to withdraw
      * @param amount The quantity to withdraw
      */
-    function withdrawTo(address to, address asset, uint amount) override external {
+    function withdrawTo(address to, address asset, uint amount) external override {
         return withdrawInternal(msg.sender, msg.sender, to, asset, amount);
     }
 
@@ -1023,7 +1036,7 @@ contract ScrollComet is CometMainInterface {
      * @param asset The asset to withdraw
      * @param amount The quantity to withdraw
      */
-    function withdrawFrom(address src, address to, address asset, uint amount) override external {
+    function withdrawFrom(address src, address to, address asset, uint amount) external override {
         return withdrawInternal(msg.sender, src, to, asset, amount);
     }
 
@@ -1103,14 +1116,16 @@ contract ScrollComet is CometMainInterface {
      * @param absorber The recipient of the incentive paid to the caller of absorb
      * @param accounts The list of underwater accounts to absorb
      */
-    function absorb(address absorber, address[] calldata accounts) override external {
+    function absorb(address absorber, address[] calldata accounts) external override {
         if (isAbsorbPaused()) revert Paused();
 
         uint startGas = gasleft();
         accrueInternal();
         for (uint i = 0; i < accounts.length; ) {
             absorbInternal(absorber, accounts[i]);
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
         uint gasUsed = startGas - gasleft();
 
@@ -1151,7 +1166,9 @@ contract ScrollComet is CometMainInterface {
 
                 emit AbsorbCollateral(absorber, account, asset, seizeAmount, value);
             }
-            unchecked { i++; }
+            unchecked {
+                i++;
+            }
         }
 
         uint256 deltaBalance = divPrice(deltaValue, basePrice, uint64(baseScale));
@@ -1191,7 +1208,7 @@ contract ScrollComet is CometMainInterface {
      * @param baseAmount The amount of base tokens used to buy the collateral
      * @param recipient The recipient address
      */
-    function buyCollateral(address asset, uint minAmount, uint baseAmount, address recipient) override external {
+    function buyCollateral(address asset, uint minAmount, uint baseAmount, address recipient) external override {
         if (isBuyPaused()) revert Paused();
 
         int reserves = getReserves();
@@ -1218,7 +1235,7 @@ contract ScrollComet is CometMainInterface {
      * @param baseAmount The amount of the base asset to get the quote for
      * @return The quote in terms of the collateral asset
      */
-    function quoteCollateral(address asset, uint baseAmount) override public view returns (uint) {
+    function quoteCollateral(address asset, uint baseAmount) public view override returns (uint) {
         AssetInfo memory assetInfo = getAssetInfoByAddress(asset);
         uint256 assetPrice = getPrice(assetInfo.priceFeed);
         // Store front discount is derived from the collateral asset's liquidationFactor and storeFrontPriceFactor
@@ -1229,7 +1246,7 @@ contract ScrollComet is CometMainInterface {
         // # of collateral assets
         // = (TotalValueOfBaseAmount / DiscountedPriceOfCollateralAsset) * assetScale
         // = ((basePrice * baseAmount / baseScale) / assetPriceDiscounted) * assetScale
-        return basePrice * baseAmount * assetInfo.scale / assetPriceDiscounted / baseScale;
+        return (basePrice * baseAmount * assetInfo.scale) / assetPriceDiscounted / baseScale;
     }
 
     /**
@@ -1237,7 +1254,7 @@ contract ScrollComet is CometMainInterface {
      * @param to An address of the receiver of withdrawn reserves
      * @param amount The amount of reserves to be withdrawn from the protocol
      */
-    function withdrawReserves(address to, uint amount) override external {
+    function withdrawReserves(address to, uint amount) external override {
         if (msg.sender != governor) revert Unauthorized();
 
         int reserves = getReserves();
@@ -1257,7 +1274,7 @@ contract ScrollComet is CometMainInterface {
      * @param manager The account which will be allowed or disallowed
      * @param amount The amount of an asset to approve
      */
-    function approveThis(address manager, address asset, uint amount) override external {
+    function approveThis(address manager, address asset, uint amount) external override {
         if (msg.sender != governor) revert Unauthorized();
 
         ERC20(asset).approve(manager, amount);
@@ -1268,7 +1285,7 @@ contract ScrollComet is CometMainInterface {
      * @dev Note: uses updated interest indices to calculate
      * @return The supply of tokens
      **/
-    function totalSupply() override external view returns (uint256) {
+    function totalSupply() external view override returns (uint256) {
         (uint64 baseSupplyIndex_, ) = accruedInterestIndices(getNowInternal() - lastAccrualTime);
         return presentValueSupply(baseSupplyIndex_, totalSupplyBase);
     }
@@ -1278,7 +1295,7 @@ contract ScrollComet is CometMainInterface {
      * @dev Note: uses updated interest indices to calculate
      * @return The amount of debt
      **/
-    function totalBorrow() override external view returns (uint256) {
+    function totalBorrow() external view override returns (uint256) {
         (, uint64 baseBorrowIndex_) = accruedInterestIndices(getNowInternal() - lastAccrualTime);
         return presentValueBorrow(baseBorrowIndex_, totalBorrowBase);
     }
@@ -1289,7 +1306,7 @@ contract ScrollComet is CometMainInterface {
      * @param account The account whose balance to query
      * @return The present day base balance magnitude of the account, if positive
      */
-    function balanceOf(address account) override public view returns (uint256) {
+    function balanceOf(address account) public view override returns (uint256) {
         (uint64 baseSupplyIndex_, ) = accruedInterestIndices(getNowInternal() - lastAccrualTime);
         int104 principal = userBasic[account].principal;
         return principal > 0 ? presentValueSupply(baseSupplyIndex_, unsigned104(principal)) : 0;
@@ -1301,7 +1318,7 @@ contract ScrollComet is CometMainInterface {
      * @param account The account whose balance to query
      * @return The present day base balance magnitude of the account, if negative
      */
-    function borrowBalanceOf(address account) override public view returns (uint256) {
+    function borrowBalanceOf(address account) public view override returns (uint256) {
         (, uint64 baseBorrowIndex_) = accruedInterestIndices(getNowInternal() - lastAccrualTime);
         int104 principal = userBasic[account].principal;
         return principal < 0 ? presentValueBorrow(baseBorrowIndex_, unsigned104(-principal)) : 0;
@@ -1317,8 +1334,12 @@ contract ScrollComet is CometMainInterface {
             let result := delegatecall(gas(), delegate, 0, calldatasize(), 0, 0)
             returndatacopy(0, 0, returndatasize())
             switch result
-            case 0 { revert(0, returndatasize()) }
-            default { return(0, returndatasize()) }
+            case 0 {
+                revert(0, returndatasize())
+            }
+            default {
+                return(0, returndatasize())
+            }
         }
     }
 }
