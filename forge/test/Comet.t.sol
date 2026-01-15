@@ -15,14 +15,20 @@ import "../../contracts/test/SimplePriceFeed.sol";
 import "../../contracts/CometProxyAdmin.sol";
 import "../../contracts/ConfiguratorProxy.sol";
 import "../../contracts/CometConfiguration.sol";
+import "../../contracts/bulkers/MainnetBulker.sol";
 import {CometExtAssetList} from "../../contracts/CometExtAssetList.sol";
 import {AssetListFactory} from "../../contracts/AssetListFactory.sol";
 import {IERC20Metadata} from "../../contracts/IERC20Metadata.sol";
+import {IERC20} from "../../contracts/IERC20.sol";
 
 contract TempCometImpl {}
 
 contract CometTest is Test {
     uint64 internal constant SECONDS_PER_YEAR = 31_536_000;
+
+    address USDC_ADDRESS = address(0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48);
+    address constant WETH_ADDRESS = address(0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2);
+    address constant WSTETH_ADDRESS = address(0x7f39C581F595B53c5cb19bD0b3f8dA6c935E2Ca0);
 
     address owner = makeAddr("owner");
     address governor = makeAddr("governor");
@@ -33,11 +39,11 @@ contract CometTest is Test {
     address charlie = makeAddr("charlie");
     address absorber = makeAddr("absorber");
 
-    FaucetToken public usdc;
+    IERC20 public usdc;
     SimplePriceFeed public usdcPriceFeed;
     Comp public comp;
     SimplePriceFeed public compPriceFeed;
-    FaucetToken public weth;
+    IWETH9 public weth;
     SimplePriceFeed public wethPriceFeed;
 
     Comet public cUSDCv3;
@@ -46,14 +52,17 @@ contract CometTest is Test {
     CometFactory public cometFactory;
     CometProxyAdmin public cometProxyAdmin;
     ConfiguratorProxy public configuratorProxy;
+    MainnetBulker public bulker;
 
-    CometHelper public cometHelper = new CometHelper();
+    CometHelper public cometHelper;
 
     function setUp() public {
-        usdc = new FaucetToken(10_000_000 * 1e6, "USDC", 6, "USDC");
+        vm.createSelectFork(vm.envString("MAINNET_QUICKNODE_LINK"));
+
+        usdc = IERC20(USDC_ADDRESS);
         usdcPriceFeed = new SimplePriceFeed(1e8, 8);
 
-        weth = new FaucetToken(10_000_000 * 1e18, "WETH", 18, "WETH");
+        weth = IWETH9(payable(WETH_ADDRESS));
         wethPriceFeed = new SimplePriceFeed(333756000000, 8);
 
         comp = new Comp(owner);
@@ -154,6 +163,10 @@ contract CometTest is Test {
 
         cUSDCv3 = Comet(payable(address(cometProxy)));
 
+        bulker = new MainnetBulker(owner, payable(WETH_ADDRESS), WSTETH_ADDRESS);
+
+        cometHelper = new CometHelper();
+
         vm.warp(block.timestamp + 2 days);
 
         // alice supply Base asset usdc
@@ -167,14 +180,6 @@ contract CometTest is Test {
             DecimalFormatter.formatToString(cUSDCv3.balanceOf(alice), IERC20Metadata(address(cUSDCv3)).decimals(), 6),
             IERC20Metadata(address(cUSDCv3)).symbol()
         );
-
-        vm.warp(block.timestamp + 2 days);
-
-        // bob supply Collateral asset comp
-        vm.startPrank(bob);
-        comp.approve(address(cUSDCv3), 10_000 * 1e18);
-        cUSDCv3.supply(address(comp), 10_000 * 1e18);
-        vm.stopPrank();
 
         vm.warp(block.timestamp + 2 days);
     }
@@ -227,24 +232,97 @@ contract CometTest is Test {
         vm.stopPrank();
     }
 
-    function test_BorrowBaseToken() public {
-        console.log("borrowableBaseAmount", cometHelper.getBorrowableBaseAmount(address(cUSDCv3), bob));
-
+    function test_CollateralAndBorrowBaseToken() public {
+        // 1: bob supply Collateral asset comp
         vm.startPrank(bob);
+        console.log(" collateralizing ......");
+        comp.approve(address(cUSDCv3), 10_000 * 1e18);
+        cUSDCv3.supply(address(comp), 10_000 * 1e18);
+        vm.stopPrank();
 
+        console.log(
+            "borrowableBaseAmount: %s %s",
+            DecimalFormatter.formatToString(
+                cometHelper.getBorrowableBaseAmount(address(cUSDCv3), bob),
+                IERC20Metadata(address(cUSDCv3)).decimals(),
+                6
+            ),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+        // 2: bob borrow base token usdc
+        vm.startPrank(bob);
         console.log("borrowing ......");
         cUSDCv3.withdraw(address(usdc), 100_000 * 1e6);
         vm.stopPrank();
 
-        console.log("borrowedBaseAmount", cUSDCv3.borrowBalanceOf(bob));
+        console.log(
+            "borrowedBaseAmount: %s %s",
+            DecimalFormatter.formatToString(
+                cUSDCv3.borrowBalanceOf(bob),
+                IERC20Metadata(address(cUSDCv3)).decimals(),
+                6
+            ),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
 
-        console.log("borrowableBaseAmount", cometHelper.getBorrowableBaseAmount(address(cUSDCv3), bob));
+        console.log(
+            "borrowableBaseAmount: %s %s",
+            DecimalFormatter.formatToString(
+                cometHelper.getBorrowableBaseAmount(address(cUSDCv3), bob),
+                IERC20Metadata(address(cUSDCv3)).decimals(),
+                6
+            ),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+
+        _log_comet_infos();
+
+        vm.warp(block.timestamp + 2 days);
+
+        // 3: bob collateral COMP and borrow base token usdc in single transaction
+
+        vm.startPrank(bob);
+        console.log("collateralizing and borrowing ......");
+        bytes32[] memory actions = new bytes32[](2);
+        actions[0] = bulker.ACTION_SUPPLY_ASSET();
+        actions[1] = bulker.ACTION_WITHDRAW_ASSET();
+
+        bytes[] memory datas = new bytes[](2);
+        datas[0] = abi.encode(address(cUSDCv3), bob, address(comp), 10_000 * 1e18);
+        datas[1] = abi.encode(address(cUSDCv3), bob, address(usdc), 100_000 * 1e6);
+
+        vm.startPrank(bob);
+        // allow bulker to manage bob's account
+        CometExt(address(cUSDCv3)).allow(address(bulker), true);
+        comp.approve(address(cUSDCv3), 10_000 * 1e18);
+
+        bulker.invoke(actions, datas);
+        vm.stopPrank();
+        console.log(
+            "borrowedBaseAmount: %s %s",
+            DecimalFormatter.formatToString(
+                cUSDCv3.borrowBalanceOf(bob),
+                IERC20Metadata(address(cUSDCv3)).decimals(),
+                6
+            ),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+
+        console.log(
+            "borrowableBaseAmount: %s %s",
+            DecimalFormatter.formatToString(
+                cometHelper.getBorrowableBaseAmount(address(cUSDCv3), bob),
+                IERC20Metadata(address(cUSDCv3)).decimals(),
+                6
+            ),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
 
         _log_comet_infos();
     }
 
     function test_Liquidate_Refunded() public {
-        test_BorrowBaseToken();
+        test_CollateralAndBorrowBaseToken();
 
         vm.warp(block.timestamp + 2 days);
 
@@ -347,7 +425,7 @@ contract CometTest is Test {
     }
 
     function test_Liquidate_NotRefunded() public {
-        test_BorrowBaseToken();
+        test_CollateralAndBorrowBaseToken();
 
         vm.warp(block.timestamp + 2 days);
 
@@ -452,3 +530,4 @@ contract CometTest is Test {
 }
 
 // forge test --match-contract CometTest --match-test test_BuyCollateral -vvv
+// forge test --match-contract CometTest -vvv
