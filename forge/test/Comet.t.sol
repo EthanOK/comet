@@ -22,6 +22,8 @@ import {IERC20Metadata} from "../../contracts/IERC20Metadata.sol";
 contract TempCometImpl {}
 
 contract CometTest is Test {
+    uint64 internal constant SECONDS_PER_YEAR = 31_536_000;
+
     address owner = makeAddr("owner");
     address governor = makeAddr("governor");
     address pauseGuardian = makeAddr("pauseGuardian");
@@ -119,12 +121,12 @@ contract CometTest is Test {
                 extensionDelegate: address(cUSDCv3CometExt),
                 supplyKink: 900000000000000000,
                 supplyPerYearInterestRateBase: 0,
-                supplyPerYearInterestRateSlopeLow: 1141552511,
-                supplyPerYearInterestRateSlopeHigh: 101344495180,
+                supplyPerYearInterestRateSlopeLow: 1141552511 * SECONDS_PER_YEAR,
+                supplyPerYearInterestRateSlopeHigh: 101344495180 * SECONDS_PER_YEAR,
                 borrowKink: 900000000000000000,
-                borrowPerYearInterestRateBase: 475646879,
-                borrowPerYearInterestRateSlopeLow: 880834601,
-                borrowPerYearInterestRateSlopeHigh: 114155251141,
+                borrowPerYearInterestRateBase: 475646879 * SECONDS_PER_YEAR,
+                borrowPerYearInterestRateSlopeLow: 880834601 * SECONDS_PER_YEAR,
+                borrowPerYearInterestRateSlopeHigh: 114155251141 * SECONDS_PER_YEAR,
                 storeFrontPriceFactor: 600000000000000000,
                 trackingIndexScale: 1000000000000000,
                 baseTrackingSupplySpeed: 636574074074,
@@ -152,15 +154,21 @@ contract CometTest is Test {
 
         cUSDCv3 = Comet(payable(address(cometProxy)));
 
-        vm.warp(block.timestamp + 60 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         // alice supply Base asset usdc
         vm.startPrank(alice);
-        usdc.approve(address(cUSDCv3), 1_000_000 * 1e6);
-        cUSDCv3.supply(address(usdc), 1_000_000 * 1e6);
+        usdc.approve(address(cUSDCv3), 200_000 * 1e6);
+        cUSDCv3.supply(address(usdc), 200_000 * 1e6);
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 60 minutes);
+        console.log(
+            "Alice Balance: %s %s",
+            DecimalFormatter.formatToString(cUSDCv3.balanceOf(alice), IERC20Metadata(address(cUSDCv3)).decimals(), 6),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+
+        vm.warp(block.timestamp + 2 days);
 
         // bob supply Collateral asset comp
         vm.startPrank(bob);
@@ -168,21 +176,46 @@ contract CometTest is Test {
         cUSDCv3.supply(address(comp), 10_000 * 1e18);
         vm.stopPrank();
 
-        vm.warp(block.timestamp + 60 minutes);
+        vm.warp(block.timestamp + 2 days);
     }
 
-    function test_AfterDeploymentCometInfos() public {
+    function test_AfterDeploymentCometInfos() public view {
         _log_comet_infos();
     }
 
     function _log_comet_infos() internal view {
-        console.log("reserves", (cUSDCv3.getReserves()));
+        uint8 baseTokenDecimals = IERC20Metadata(cUSDCv3.baseToken()).decimals();
+        console.log(
+            "reserves: %s %s",
+            DecimalFormatter.formatToString(cUSDCv3.getReserves(), baseTokenDecimals, 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
         uint256 utilization = cUSDCv3.getUtilization();
-        console.log("utilization", utilization);
-        console.log("supplyRate", cUSDCv3.getSupplyRate(utilization));
-        console.log("borrowRate", cUSDCv3.getBorrowRate(utilization));
-        console.log("totalSupply", cUSDCv3.totalSupply());
-        console.log("totalBorrow", cUSDCv3.totalBorrow());
+        console.log("utilization:", DecimalFormatter.formatToString(utilization, 18, 6));
+        console.log(
+            "supplyRate Per Year:",
+            DecimalFormatter.formatToString(cUSDCv3.getSupplyRate(utilization) * SECONDS_PER_YEAR, 18, 6)
+        );
+        console.log(
+            "borrowRate Per Year:",
+            DecimalFormatter.formatToString(cUSDCv3.getBorrowRate(utilization) * SECONDS_PER_YEAR, 18, 6)
+        );
+        console.log(
+            "totalSupply: %s %s",
+            DecimalFormatter.formatToString(cUSDCv3.totalSupply(), baseTokenDecimals, 6),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+        console.log(
+            "totalBorrow: %s %s",
+            DecimalFormatter.formatToString(cUSDCv3.totalBorrow(), baseTokenDecimals, 6),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+        console.log(
+            "Alice Balance: %s %s",
+            DecimalFormatter.formatToString(cUSDCv3.balanceOf(alice), IERC20Metadata(address(cUSDCv3)).decimals(), 6),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+
         console.log("`````````````````````````````");
     }
 
@@ -210,10 +243,10 @@ contract CometTest is Test {
         _log_comet_infos();
     }
 
-    function test_Liquidate() public {
+    function test_Liquidate_Refunded() public {
         test_BorrowBaseToken();
 
-        vm.warp(block.timestamp + 60 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         (, int price, , , ) = compPriceFeed.latestRoundData();
 
@@ -243,21 +276,131 @@ contract CometTest is Test {
         _log_comet_infos();
     }
 
-    function test_BuyCollateral() public {
-        test_Liquidate();
+    function test_BuyCollateral_WhenLiquidatedRefunded() public {
+        test_Liquidate_Refunded();
 
-        vm.warp(block.timestamp + 10 minutes);
+        vm.warp(block.timestamp + 2 days);
 
         uint256 collateralReserves = cUSDCv3.getCollateralReserves(address(comp));
 
-        console.log("collateralReserves", collateralReserves);
+        console.log(
+            "collateralReserves: %s %s",
+            DecimalFormatter.formatToString(collateralReserves, IERC20Metadata(address(comp)).decimals(), 6),
+            IERC20Metadata(address(comp)).symbol()
+        );
 
         uint256 baseAmount = cometHelper.quoteBaseForCollateral(address(cUSDCv3), address(comp), collateralReserves);
-        console.log("baseAmount", baseAmount);
+        console.log(
+            "need to pay baseAmount: %s %s",
+            DecimalFormatter.formatToString(baseAmount, IERC20Metadata(cUSDCv3.baseToken()).decimals(), 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
 
         uint256 collateralAmount = cometHelper.quoteCollateralForBase(address(cUSDCv3), address(comp), baseAmount);
 
-        console.log("collateralAmount", collateralAmount);
+        uint256 minAmount = (collateralAmount * 99) / 100;
+
+        console.log("buyCollateral ......");
+
+        console.log(
+            "Pay: %s %s",
+            DecimalFormatter.formatToString(baseAmount, IERC20Metadata(cUSDCv3.baseToken()).decimals(), 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
+
+        uint256 balance_before = comp.balanceOf(charlie);
+
+        vm.startPrank(charlie);
+        usdc.approve(address(cUSDCv3), type(uint256).max);
+        cUSDCv3.buyCollateral(address(comp), minAmount, baseAmount, charlie);
+        vm.stopPrank();
+
+        uint256 balance_after = comp.balanceOf(charlie);
+
+        uint256 received_comp = balance_after - balance_before;
+        uint256 receivedValue = cometHelper.quoteBaseForCollateralNoDiscount(
+            address(cUSDCv3),
+            address(comp),
+            received_comp
+        );
+
+        console.log(
+            "Received: %s %s",
+            DecimalFormatter.formatToString(received_comp, IERC20Metadata(address(comp)).decimals(), 6),
+            IERC20Metadata(address(comp)).symbol()
+        );
+
+        console.log(
+            "Received Value: %s %s",
+            DecimalFormatter.formatToString(receivedValue, IERC20Metadata(cUSDCv3.baseToken()).decimals(), 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
+
+        uint256 profit = receivedValue - baseAmount;
+        console.log(
+            "Profit: %s %s",
+            DecimalFormatter.formatToString(profit, IERC20Metadata(cUSDCv3.baseToken()).decimals(), 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
+
+        _log_comet_infos();
+    }
+
+    function test_Liquidate_NotRefunded() public {
+        test_BorrowBaseToken();
+
+        vm.warp(block.timestamp + 2 days);
+
+        (, int price, , , ) = compPriceFeed.latestRoundData();
+
+        // Comp stocks plummeted, collateral failed to cover loans
+        compPriceFeed.setRoundData(1, (price * 40) / 100, block.timestamp, block.timestamp, 1);
+
+        require(cUSDCv3.isLiquidatable(bob), "bob is not liquidatable");
+
+        uint256 balance_before = cUSDCv3.balanceOf(bob);
+
+        console.log("liquidating ......");
+
+        vm.startPrank(absorber);
+        address[] memory accounts = new address[](1);
+        accounts[0] = bob;
+        cUSDCv3.absorb(absorber, accounts);
+        vm.stopPrank();
+
+        uint256 balance_after = cUSDCv3.balanceOf(bob);
+        uint256 refund_liquidation = balance_after - balance_before;
+
+        console.log(
+            "Refund: %s %s as Supply",
+            DecimalFormatter.formatToString(refund_liquidation, IERC20Metadata(address(cUSDCv3)).decimals(), 6),
+            IERC20Metadata(address(cUSDCv3)).symbol()
+        );
+
+        _log_comet_infos();
+    }
+
+    function test_BuyCollateral_WhenLiquidatedNotRefunded() public {
+        test_Liquidate_NotRefunded();
+
+        vm.warp(block.timestamp + 2 days);
+
+        uint256 collateralReserves = cUSDCv3.getCollateralReserves(address(comp));
+
+        console.log(
+            "collateralReserves: %s %s",
+            DecimalFormatter.formatToString(collateralReserves, IERC20Metadata(address(comp)).decimals(), 6),
+            IERC20Metadata(address(comp)).symbol()
+        );
+
+        uint256 baseAmount = cometHelper.quoteBaseForCollateral(address(cUSDCv3), address(comp), collateralReserves);
+        console.log(
+            "need to pay baseAmount: %s %s",
+            DecimalFormatter.formatToString(baseAmount, IERC20Metadata(cUSDCv3.baseToken()).decimals(), 6),
+            IERC20Metadata(cUSDCv3.baseToken()).symbol()
+        );
+
+        uint256 collateralAmount = cometHelper.quoteCollateralForBase(address(cUSDCv3), address(comp), baseAmount);
 
         uint256 minAmount = (collateralAmount * 99) / 100;
 
@@ -307,3 +450,5 @@ contract CometTest is Test {
         _log_comet_infos();
     }
 }
+
+// forge test --match-contract CometTest --match-test test_BuyCollateral -vvv
