@@ -6,6 +6,7 @@ import "./CometHelper.sol";
 import "./DecimalFormatter.sol";
 import "../../contracts/Comet.sol";
 import "../../contracts/CometExt.sol";
+import "../../contracts/CometInterface.sol";
 import "../../contracts/CometProxy.sol";
 import "../../contracts/CometFactory.sol";
 import "../../contracts/Configurator.sol";
@@ -292,9 +293,14 @@ contract CometTest is Test {
         datas[1] = abi.encode(address(cUSDCv3), bob, address(usdc), 100_000 * 1e6);
 
         vm.startPrank(bob);
-        // allow bulker to manage bob's account
-        CometExt(address(cUSDCv3)).allow(address(bulker), true);
+
         comp.approve(address(cUSDCv3), 10_000 * 1e18);
+
+        // check allowance for bulker
+        if (CometInterface(address(cUSDCv3)).allowance(bob, address(bulker)) == 0) {
+            // approve bulker to manage bob's account [type(uint256).max or 0]
+            CometInterface(address(cUSDCv3)).approve(address(bulker), type(uint256).max);
+        }
 
         bulker.invoke(actions, datas);
         vm.stopPrank();
